@@ -12,14 +12,14 @@ int main(){
     Graph* mygraph;
     while(c != 'X' && c != 'x'){
         c = getchar();
-        getchar();//To get rid of the space
-        printf("%c\n", c);
+        // printf("%c\n", c);
         if(c == 'A' || c == 'a'){
+            getchar();//To get rid of the space
             //Create graph:
             mygraph = init_graph();
             c = getchar();
             // printf("Size = %d\n", atoi(&c));
-            int size = atoi(&c);
+            int size = c - 48;  //each time we are getting a digit from the user, we subtract 48 from the value of the character to get the actual int value of the digit
             for(int i = 0; i< size; i++){
                 getchar();
                 c = getchar();
@@ -31,29 +31,25 @@ int main(){
                 memset(&c, 0, sizeof(c));
                 c = getchar();
                 printf("Initating node number %c\n",c);
-                Node* n = init_node(atoi(&c));
-                add_node(mygraph, n);
+                Node* n = init_node(c - 48);
+                add_node(mygraph, n);  
+                printf("Added node number %d\n", c - 48);
                 getchar();
-                char src = getchar();
-                if(!isdigit(src)){
-                    printf("Finished initiating graph\n");
-                    break;
+                char dest1 = getchar();
+                if(isdigit(dest1)){    
+                    getchar();
+                    char weight = getchar();
+                    connect(mygraph, n -> id, dest1, weight, mygraph -> edgesize);
+                    printf("Connected first edge\n");
                 }
-                printf("%c\n", c);
-                //Placeholder:
                 getchar();
-                char dest = getchar();
-                printf("%c\n", dest);
-
-                getchar();
-                char wtens = getchar();
-                printf("%c\n", wtens);
-
-                getchar();
-                char wones = getchar();
-                printf("%c\n", wones);
-                Edge* edge = init_edge(src, dest, (atoi(&wtens)*10 + atoi(&wones)));
-                add_edge(mygraph, edge);
+                char dest2 = getchar();
+                if(isdigit(dest2)){
+                    getchar();
+                    char weight  = getchar();
+                    connect(mygraph, n -> id, dest2, weight, mygraph -> edgesize);
+                    printf("Connected second edge\n");
+                }
             }
         }
         if (c == 'B' || c == 'b'){
@@ -70,6 +66,7 @@ int main(){
         }
         if(c == 'T' || c == 't'){
             //Get TSP:
+            printf("TSP function\n");
 
         }
         if(c == 'P' || c == 'p'){
