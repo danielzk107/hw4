@@ -18,7 +18,6 @@ int main(){
             //Create graph:
             mygraph = init_graph();
             c = getchar();
-            // printf("Size = %d\n", atoi(&c));
             int size = c - 48;  //each time we are getting a digit from the user, we subtract 48 from the value of the character to get the actual int value of the digit
             for(int i = 0; i< size; i++){
                 getchar();
@@ -30,35 +29,43 @@ int main(){
                 getchar();
                 memset(&c, 0, sizeof(c));
                 c = getchar();
-                printf("Initating node number %c\n",c);
                 Node* n = init_node(c - 48);
                 add_node(mygraph, n);  
-                printf("Added node number %d\n", c - 48);
                 getchar();
-                char dest1 = getchar();
-                if(isdigit(dest1)){    
+                c = getchar();
+                if(isdigit(c)){    
                     getchar();
                     char weight = getchar();
-                    connect(mygraph, n -> id, dest1, weight, mygraph -> edgesize);
-                    printf("Connected first edge\n");
-                }
-                getchar();
-                char dest2 = getchar();
-                if(isdigit(dest2)){
+                    connect(mygraph, n -> id, c - 48, weight - 48, mygraph -> edgesize);
                     getchar();
-                    char weight  = getchar();
-                    connect(mygraph, n -> id, dest2, weight, mygraph -> edgesize);
-                    printf("Connected second edge\n");
+                    char dest2 = getchar();
+                    if(isdigit(dest2)){
+                        getchar();
+                        char weight  = getchar();
+                        connect(mygraph, n -> id, dest2 - 48, weight - 48, mygraph -> edgesize);
+                    }
                 }
             }
         }
         if (c == 'B' || c == 'b'){
             //Add new node:
-
+            getchar();
+            char nodeid = getchar();
+            if(get_node(mygraph, nodeid - 48) != NULL){
+                Node* node = get_node(mygraph, nodeid);
+                while(node -> edges != NULL){
+                    Edge* temp = node -> edges -> next;
+                    free(node -> edges);
+                    node -> edges = NULL;
+                    node -> edges = temp;
+                }
+            }
         }
         if(c == 'D' || c == 'd'){
             //Remove node:
-
+            getchar();
+            c = getchar();
+            remove_node(mygraph, c - 48);
         }
         if(c == 'S' || c == 's'){
             //Get shortest path:

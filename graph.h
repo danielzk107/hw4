@@ -27,7 +27,7 @@ Graph* init_graph();
 Node* init_node(int id);
 Edge* init_edge(int src, int dest, float weight, int idnum);
 void add_node(Graph* g,Node* node);
-Node* remove_node(Graph* g,int id);
+void remove_node(Graph* g,int id);
 Node* get_node(Graph* g,int id);
 Edge* get_edge(Graph* g, int src, int dest);
 void add_edge(Graph* g, Edge* edge);
