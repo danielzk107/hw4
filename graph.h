@@ -30,11 +30,12 @@ void add_node(Graph* g,Node* node);
 void remove_node(Graph* g,int id);
 Node* get_node(Graph* g,int id);
 Edge* get_edge(Graph* g, int src, int dest);
+void remove_edge(Graph* g, int edge_id);
 void add_edge(Graph* g, Edge* edge);
 void connect(Graph* g, int src, int dest, float weight, int idnum);
 void print_graph(Graph* g);
 void free_graph(Graph* g);
-float shortestPath(int src, int dest);
+float shortestPath(Graph* g, int src, int dest);
 void TSP(Node* currenttsp);
 
 #endif

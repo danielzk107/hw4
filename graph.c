@@ -65,8 +65,9 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
     if(g -> current -> id == id){
         Node* n = g -> current -> next;
         free(g -> current);
+        g -> current = NULL;
         removed = 1;
-        printf("Removed node %d, current node is %d\n", id, n -> id);
+        // printf("Removed node %d, current node is %d\n", id, n -> id);
         g -> current = n;
         if(n == NULL){
             return;
@@ -79,8 +80,9 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
         if(g -> current -> id == id){
             Node* n = g -> current -> next;
             free(g -> current);
+            g -> current = NULL;
             removed = 1;
-            printf("Removed node %d, current node is %d\n", id, n -> id);
+            // printf("Removed node %d, current node is %d\n", id, n -> id);
             g -> current = n;
         }
         else{
@@ -110,7 +112,7 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
     while(g -> edges != NULL){
         if(g -> edges -> src == id || g -> edges -> dest == id){
             Edge* e = g -> edges -> next;
-            printf("%d\n", g -> edges -> idnum);
+            // printf("%d\n", g -> edges -> idnum);
             free(g -> edges);
             g -> edges = NULL;
             g -> edges = e;
@@ -132,10 +134,10 @@ Node* get_node(Graph* g, int id){
         printf("The given graph does not exist or is empty\n");
         return NULL;
     }
-    while(g -> current -> id != id && g -> current != NULL){
+    while(g -> current != NULL && g -> current -> id != id){
         g -> current = g -> current -> next;
     }
-    if(g -> current -> id != id){
+    if(g -> current != NULL && g -> current -> id != id){
         printf("The given node is not in the graph\n");
         return NULL;
     }
@@ -146,7 +148,7 @@ Node* get_node(Graph* g, int id){
 Edge* get_edge(Graph* g, int src, int dest){
     Node* srcnode = get_node(g, src);
     if(srcnode -> edges == NULL){
-        printf("The source node has no connected edges\n");
+        // printf("The source node has no connected edges\n");
         return NULL;
     }
     Edge* temp = srcnode -> edges;
@@ -155,7 +157,7 @@ Edge* get_edge(Graph* g, int src, int dest){
         srcnode -> edges = srcnode -> edges -> next;
     }
     if(srcnode -> edges == NULL){
-        printf("The source node is not connected to the destination node\n");
+        // printf("The source node is not connected to the destination node\n");
         return NULL;
     }
     output = srcnode -> edges;
@@ -172,13 +174,16 @@ void add_edge(Graph* g, Edge* edge){
     Edge* graphtemp = g -> edges;
     if(srctemp == NULL){
         srcnode -> edges = edge;
+        srcnode -> edges -> next = NULL;
     }
     else{
         while(srcnode -> edges -> next != NULL){
-            srcnode -> edges = srcnode -> edges -> next; 
+            srcnode -> edges = srcnode -> edges -> next;
         }
         srcnode -> edges -> next = edge;
-        srcnode -> edges = srctemp;
+        // printf("Added edge %d to node %d\n", edge -> idnum, srcnode -> id);
+        srcnode -> edges -> next -> next = NULL;
+        srcnode -> edges = srctemp;        
     }
     if(graphtemp == NULL){
         g -> edges = edge;
@@ -226,17 +231,92 @@ void print_graph(Graph* g){
     }
     g -> edges = tempedge;
 }
+void remove_edge(Graph* g, int edge_id){
+    int removed = -1;
+    if(g == NULL || g -> current == NULL){
+        printf("The given graph does not exist or is empty\n");
+        return;
+    }
+    if(g -> edges -> idnum == edge_id){
+        // printf("AAAAA\n");
+        Edge* e = g -> edges -> next;
+        free(g -> edges);
+        // printf("BBBBBBBBB\n");
+        g -> edges = NULL;
+        removed = 1;
+        // printf("Removed edge %d, current edge is %d\n", edge_id, e -> idnum);
+        g -> edges = e;
+        if(e == NULL){
+            return;
+        }
+    }
+    Edge* new_edge_list = g -> edges;
+    g -> edges = g -> edges -> next;
+    Edge* new_edge_list_temp = new_edge_list;
+    while(g -> edges != NULL){
+        if(g -> edges -> idnum == edge_id){
+            Edge* e = g -> edges -> next;
+            free(g -> edges);
+            g -> edges = NULL;
+            removed = 1;
+            // printf("Removed edge %d, current edge is %d\n", edge_id, e -> idnum);
+            g -> edges = e;
+        }
+        else{
+            new_edge_list -> next = g -> edges;
+            g -> edges = g -> edges -> next;
+            new_edge_list = new_edge_list -> next;
+        }
+    }
+    if(removed == -1){
+        printf("edge %d not found\n", edge_id);
+    }
+    g -> edges = new_edge_list_temp;
+}
 void free_graph(Graph* g){
     while(g -> current != NULL){
         Node* temp = g -> current -> next;
         free(g -> current);
+        g -> current = NULL;
         g -> current = temp;
     }
     while(g -> edges != NULL){
         Edge* temp = g -> edges -> next;
         free(g -> edges);
+        g -> edges = NULL;
         g -> edges = temp;
     }
     free(g);
 }
-
+float shortestPath(Graph* g, int src, int dest){
+    //Floyd-Warshall (might not be as efficient as Dijkstra's, but it more convinient)
+    float distances[g -> size][g -> size];
+    for(int i=0; i< g -> size; i++){
+        for (int j = 0; j < g -> size; j++)
+        {
+            Edge* edge = get_edge(g, i, j);
+            if(edge == NULL){
+                distances[i][j] = __INT_MAX__/2;
+            }
+            else{
+                distances[i][j] = edge -> weight;
+            }
+        }
+    }
+    for (int i = 0; i < g -> size; i++)
+    {
+        for (int j = 0; j < g -> size; j++)
+        {
+            for (int k = 0; k < g -> size; k++)
+            {
+                if(distances[j][i] + distances[i][k] < distances[j][k]){
+                    distances[j][k] = distances[j][i] + distances[i][k];
+                }
+            }
+        }
+    }
+    if(distances[src][dest] >= __INT_MAX__/2){
+        return -1;
+    }
+    return distances[src][dest];
+}
