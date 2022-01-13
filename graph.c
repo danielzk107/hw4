@@ -23,9 +23,10 @@ Node* init_node(int id){
     node -> id = id;
     node -> edges = NULL;
     node -> next = NULL;
+    node -> prev = NULL;
     return node;
 }
-Edge* init_edge(int src, int dest, float weight, int idnum){
+Edge* init_edge(int src, int dest, int weight, int idnum){
     Edge* edge = malloc(sizeof(Edge));
     if(!edge){
         printf("Unexpected problem occured whilst allocating edge\n");
@@ -49,6 +50,7 @@ void add_node(Graph* g, Node* node){
             g -> current = g -> current -> next;
         }
         g -> current -> next = node;
+        g -> current -> next -> prev = g -> current;
         g -> current = temp;
     }
     else{
@@ -61,17 +63,63 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
         printf("The given graph does not exist or is empty\n");
         return;
     }
+    Edge* graph_temp = g -> edges;
+    while(g -> edges != NULL && (g -> edges -> src == id || g -> edges -> dest == id)){
+        g -> edges = g -> edges -> next;
+    }
+    Edge* new_edge_list;
+    if(g -> edges == NULL){
+        return;
+    }
+    else{
+        new_edge_list = init_edge(g -> edges -> src, g -> edges -> dest, g -> edges -> weight, g -> edges -> idnum);
+        new_edge_list -> next = NULL;
+    }
+    int new_edgesize = 0;
+    Edge* new_edge_list_temp = new_edge_list;
+    while(g -> edges != NULL){
+        if(g -> edges -> src != id && g -> edges -> dest != id){
+            new_edge_list -> next = init_edge(g -> edges -> src, g -> edges -> dest, g -> edges -> weight, g -> edges -> idnum);
+            // printf("Added edge %d from %d to %d\n", g -> edges -> idnum, g -> edges -> src, g -> edges -> dest);
+            new_edge_list = new_edge_list -> next;
+            new_edge_list -> next = NULL;
+            new_edgesize++;
+        }
+        g -> edges = g -> edges -> next; 
+    }
+    g -> edgesize = new_edgesize;
+    g -> edges = graph_temp;
+    while(g -> edges != NULL){
+        Edge* temp = g -> edges -> next;
+        free(g -> edges);
+        g -> edges = NULL;
+        g -> edges = temp;
+    }
+    new_edge_list = new_edge_list_temp;
+    g -> edges = NULL;
+    g -> edges = new_edge_list;
+    graph_temp = g -> edges;
+    new_edge_list = new_edge_list -> next;
+    while(new_edge_list != NULL){
+        if(new_edge_list ->  idnum != g -> edges -> idnum){
+            g -> edges -> next = new_edge_list;
+            g -> edges = g -> edges -> next;
+        }
+        new_edge_list = new_edge_list -> next;
+        // printf("From %d to %d with weight of %f\n", g -> edges -> src, g -> edges -> dest, g -> edges -> weight);
+    }
+    g -> edges = graph_temp;
     int removed = -1;
     if(g -> current -> id == id){
         Node* n = g -> current -> next;
         free(g -> current);
         g -> current = NULL;
         removed = 1;
-        // printf("Removed node %d, current node is %d\n", id, n -> id);
         g -> current = n;
         if(n == NULL){
             return;
         }
+        g -> current -> prev = NULL;
     }
     Node* new_node_list = g -> current;
     g -> current = g -> current -> next;
@@ -79,10 +127,12 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
     while(g -> current != NULL){
         if(g -> current -> id == id){
             Node* n = g -> current -> next;
+            if( g -> current -> prev != NULL){
+                g -> current -> prev -> next = NULL;
+            }
             free(g -> current);
             g -> current = NULL;
             removed = 1;
-            // printf("Removed node %d, current node is %d\n", id, n -> id);
             g -> current = n;
         }
         else{
@@ -96,36 +146,59 @@ void remove_node(Graph* g, int id){ //Doesnt remove edges from the graph yet
         printf("The given node is not in the graph\n");
         return;
     }
-    Edge* new_edge_list;
-    while(g -> edges != NULL && (g -> edges -> src == id || g -> edges -> dest == id)){
-        Edge* e = g -> edges -> next;
-        free(g -> edges);
-        g -> edges = NULL;
-        g -> edges = e;
+    g -> size -= 1;
+}
+void remove_node_out_edges(Graph* g, int id){
+    if(g == NULL || g -> current == NULL){
+        printf("The given graph does not exist or is empty\n");
+        return;
     }
-    new_edge_list = g -> edges;
-    Edge* new_edge_list_temp = g -> edges;
+    Edge* graph_temp = g -> edges;
+    while(g -> edges != NULL && g -> edges -> src == id ){
+        g -> edges = g -> edges -> next;
+    }
+    Edge* new_edge_list;
     if(g -> edges == NULL){
         return;
     }
-    g -> edges = g -> edges -> next;
-    while(g -> edges != NULL){
-        if(g -> edges -> src == id || g -> edges -> dest == id){
-            Edge* e = g -> edges -> next;
-            // printf("%d\n", g -> edges -> idnum);
-            free(g -> edges);
-            g -> edges = NULL;
-            g -> edges = e;
-        }
-        else{
-                new_edge_list -> next = g -> edges;
-                new_edge_list -> next -> next = NULL;
-                g -> edges = g -> edges -> next;
-                new_edge_list = new_edge_list -> next;
-        }
+    else{
+        new_edge_list = init_edge(g -> edges -> src, g -> edges -> dest, g -> edges -> weight, g -> edges -> idnum);
+        new_edge_list -> next = NULL;
     }
-    g -> edges = new_edge_list_temp;
-    g -> size -=1;
+    int new_edgesize = 0;
+    Edge* new_edge_list_temp = new_edge_list;
+    while(g -> edges != NULL){
+        if(g -> edges -> src != id){
+            new_edge_list -> next = init_edge(g -> edges -> src, g -> edges -> dest, g -> edges -> weight, g -> edges -> idnum);
+            // printf("Added edge %d from %d to %d\n", g -> edges -> idnum, g -> edges -> src, g -> edges -> dest);
+            new_edge_list = new_edge_list -> next;
+            new_edge_list -> next = NULL;
+            new_edgesize++;
+        }
+        g -> edges = g -> edges -> next; 
+    }
+    g -> edgesize = new_edgesize;
+    g -> edges = graph_temp;
+    while(g -> edges != NULL){
+        Edge* temp = g -> edges -> next;
+        free(g -> edges);
+        g -> edges = NULL;
+        g -> edges = temp;
+    }
+    new_edge_list = new_edge_list_temp;
+    g -> edges = NULL;
+    g -> edges = new_edge_list;
+    graph_temp = g -> edges;
+    new_edge_list = new_edge_list -> next;
+    while(new_edge_list != NULL){
+        if(new_edge_list ->  idnum != g -> edges -> idnum){
+            g -> edges -> next = new_edge_list;
+            g -> edges = g -> edges -> next;
+        }
+        new_edge_list = new_edge_list -> next;
+        // printf("From %d to %d with weight of %f\n", g -> edges -> src, g -> edges -> dest, g -> edges -> weight);
+    }
+    g -> edges = graph_temp;
 }
 Node* get_node(Graph* g, int id){
     Node* temp = g -> current;
@@ -146,29 +219,26 @@ Node* get_node(Graph* g, int id){
     return output;
 }
 Edge* get_edge(Graph* g, int src, int dest){
-    Node* srcnode = get_node(g, src);
-    if(srcnode -> edges == NULL){
-        // printf("The source node has no connected edges\n");
-        return NULL;
-    }
-    Edge* temp = srcnode -> edges;
+    Edge* temp = g -> edges;
     Edge* output;
-    while(srcnode -> edges != NULL && srcnode -> edges -> dest != dest){
-        srcnode -> edges = srcnode -> edges -> next;
+    while(g -> edges != NULL){
+        if(g -> edges -> dest == dest && g -> edges -> src == src){
+            output = g -> edges;
+            g -> edges = temp;
+            return output;
+        }
+        g -> edges = g -> edges -> next;
     }
-    if(srcnode -> edges == NULL){
-        // printf("The source node is not connected to the destination node\n");
-        return NULL;
-    }
-    output = srcnode -> edges;
-    srcnode -> edges = temp;
-    return output;
+    g -> edges = temp;
+    return NULL;
+    
 }
 void add_edge(Graph* g, Edge* edge){
     if(g == NULL || g -> current == NULL){
         printf("The given graph does not exist or is empty\n");
         return;
     }
+    edge -> next = NULL;
     Node* srcnode = get_node(g, edge -> src);
     Edge* srctemp = srcnode -> edges;
     Edge* graphtemp = g -> edges;
@@ -181,7 +251,6 @@ void add_edge(Graph* g, Edge* edge){
             srcnode -> edges = srcnode -> edges -> next;
         }
         srcnode -> edges -> next = edge;
-        // printf("Added edge %d to node %d\n", edge -> idnum, srcnode -> id);
         srcnode -> edges -> next -> next = NULL;
         srcnode -> edges = srctemp;        
     }
@@ -203,7 +272,7 @@ void add_edge(Graph* g, Edge* edge){
     }
     g -> edgesize += 1;
 }
-void connect(Graph* g, int src, int dest, float weight, int idnum){
+void connect(Graph* g, int src, int dest, int weight, int idnum){
     Edge* edge = init_edge(src, dest, weight, idnum);
     add_edge(g, edge);
 }
@@ -225,6 +294,7 @@ void print_graph(Graph* g){
     while(g -> edges != NULL){
         printf("From %d to %d with weight of %f\n", g -> edges -> src, g -> edges -> dest, g -> edges -> weight);
         if(g -> edges -> next != NULL && g -> edges -> idnum == g -> edges -> next -> idnum){
+            // printf("AAAAAA\n");
             return;
         }
         g -> edges = g -> edges -> next;
@@ -238,10 +308,12 @@ void remove_edge(Graph* g, int edge_id){
         return;
     }
     if(g -> edges -> idnum == edge_id){
-        // printf("AAAAA\n");
+        // printf("EAAAAA\n");
         Edge* e = g -> edges -> next;
+        // printf("removing edge %d\n", edge_id);
         free(g -> edges);
-        // printf("BBBBBBBBB\n");
+        // printf("Removed edge %d\n", edge_id);
+        // printf("EBBBBBBBBB\n");
         g -> edges = NULL;
         removed = 1;
         // printf("Removed edge %d, current edge is %d\n", edge_id, e -> idnum);
@@ -250,8 +322,9 @@ void remove_edge(Graph* g, int edge_id){
             return;
         }
     }
+    // printf("ECCCCC\n");
     Edge* new_edge_list = g -> edges;
-    g -> edges = g -> edges -> next;
+    // g -> edges = g -> edges -> next;
     Edge* new_edge_list_temp = new_edge_list;
     while(g -> edges != NULL){
         if(g -> edges -> idnum == edge_id){
@@ -259,10 +332,12 @@ void remove_edge(Graph* g, int edge_id){
             free(g -> edges);
             g -> edges = NULL;
             removed = 1;
+            // printf("EDDDDDDDDD\n");
             // printf("Removed edge %d, current edge is %d\n", edge_id, e -> idnum);
             g -> edges = e;
         }
         else{
+            // printf("at edge %d, from %d to %d\n", g -> edges -> idnum, g -> edges -> src, g -> edges -> dest);
             new_edge_list -> next = g -> edges;
             g -> edges = g -> edges -> next;
             new_edge_list = new_edge_list -> next;
@@ -270,6 +345,9 @@ void remove_edge(Graph* g, int edge_id){
     }
     if(removed == -1){
         printf("edge %d not found\n", edge_id);
+    }
+    else{
+        printf("removed edge %d\n", edge_id);
     }
     g -> edges = new_edge_list_temp;
 }
@@ -288,7 +366,7 @@ void free_graph(Graph* g){
     }
     free(g);
 }
-float shortestPath(Graph* g, int src, int dest){
+int shortestPath(Graph* g, int src, int dest){
     //Floyd-Warshall (might not be as efficient as Dijkstra's, but it more convinient)
     float distances[g -> size][g -> size];
     for(int i=0; i< g -> size; i++){
@@ -319,4 +397,67 @@ float shortestPath(Graph* g, int src, int dest){
         return -1;
     }
     return distances[src][dest];
+}
+void swap(int* a, int* b){
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+int get_shortest_path_of_list(Graph* g, int* arr, int size){
+    int sum = 0;
+    for(int i = 0;i < size - 1; i++){
+        int temp = shortestPath(g, *(arr +i), *(arr + i + 1));
+        if(temp == -1){
+            sum += __INT_MAX__/2;
+        }
+        else{
+        sum += temp;
+        } 
+    }
+    return sum;
+}
+void printarr(int* arr, int size){
+    for(int i = 0; i < size; i++){
+        printf("%d\t", arr[i]);
+    }
+    printf("\n");
+}
+void update_all_paths(Graph* g, int* arr, int num_of_permutation, int** results, int start, int end, int size){
+    if(start == end){
+        *(*results + num_of_permutation) = get_shortest_path_of_list(g, arr, size);
+        return;
+    }
+    
+    for(int i=start; i <= end; i++){
+        swap((arr + i), (arr + start));
+        update_all_paths(g, arr, num_of_permutation + i, results, start + 1, end, size);
+        swap((arr + i), (arr + start));
+    }
+}
+int factorial(int num){
+    if(num == 1){
+        return 1;
+    }
+    return num * (num - 1);
+}
+int TSP(Graph* g, Node* currenttsp, int size){
+    //We convert the nodelist to an array: (Assuming maximum number of elements is 6):
+    int* arr = calloc(size, sizeof(int));
+    int pos = 0;
+    while(currenttsp != NULL){
+        *(arr + pos) = currenttsp -> id;
+        pos++;
+        currenttsp = currenttsp -> next;
+    }
+    int* results = calloc(factorial(size), sizeof(int));
+    update_all_paths(g, arr, 0, &results, 0, size - 1, size);
+    int output = __INT_MAX__;
+    for(int i=0; i<factorial(size); i++){
+        if(*(results + i) < output && *(results + i) != 0){
+            output = *(results + i);
+        }
+    }
+    free(arr);
+    free(results);
+    return output;
 }

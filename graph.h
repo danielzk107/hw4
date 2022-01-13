@@ -14,7 +14,7 @@ typedef struct Edge {
 typedef struct Node {
     int id;
     Edge* edges;  //Keeps only the edges going out of the node
-    struct Node *next;
+    struct Node *next, *prev;
 } Node;
 typedef struct Graph {
     int size;
@@ -25,17 +25,18 @@ typedef struct Graph {
 
 Graph* init_graph();
 Node* init_node(int id);
-Edge* init_edge(int src, int dest, float weight, int idnum);
+Edge* init_edge(int src, int dest, int weight, int idnum);
 void add_node(Graph* g,Node* node);
 void remove_node(Graph* g,int id);
+void remove_node_out_edges(Graph* g, int id);
 Node* get_node(Graph* g,int id);
 Edge* get_edge(Graph* g, int src, int dest);
 void remove_edge(Graph* g, int edge_id);
 void add_edge(Graph* g, Edge* edge);
-void connect(Graph* g, int src, int dest, float weight, int idnum);
+void connect(Graph* g, int src, int dest, int weight, int idnum);
 void print_graph(Graph* g);
 void free_graph(Graph* g);
-float shortestPath(Graph* g, int src, int dest);
-void TSP(Node* currenttsp);
+int shortestPath(Graph* g, int src, int dest);
+int TSP(Graph* g, Node* currenttsp, int size);
 
 #endif

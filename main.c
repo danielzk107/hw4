@@ -63,46 +63,16 @@ int main(){
             Node* node;
             //Check if the node already exists:
             if(get_node(mygraph, nodeid - 48) != NULL){
-                print_graph(mygraph);
+                // print_graph(mygraph);
                 node = get_node(mygraph, nodeid - 48);
-                Edge* new_edge_list;
-                while(mygraph -> edges != NULL && mygraph -> edges -> src == node -> id){  //Delete all of the existing node's (entering) edges
-                    Edge* e = mygraph -> edges -> next;
-                    print_graph(mygraph);
-                    free(mygraph -> edges);
-                    mygraph -> edges = NULL;
-                    mygraph -> edges = e;
-                }
-                new_edge_list = mygraph -> edges;
-                Edge* new_edge_list_temp = mygraph -> edges;
-                if(mygraph -> edges !=NULL){
-                    mygraph -> edges = mygraph -> edges -> next;
-                }
-                while(mygraph -> edges != NULL){
-                    print_graph(mygraph);
-                    if(mygraph -> edges -> src == node -> id){
-                        Edge* e = mygraph -> edges -> next;
-                        free(mygraph -> edges);
-                        mygraph -> edges = NULL;
-                        mygraph -> edges = e;
-                    }
-                    else{
-                        new_edge_list -> next = mygraph -> edges;
-                        new_edge_list -> next -> next = NULL;
-                        mygraph -> edges = mygraph -> edges -> next;
-                        new_edge_list = new_edge_list -> next;
-                    }
-                }
-                print_graph(mygraph);
-                mygraph -> edges = new_edge_list_temp;
-                print_graph(mygraph);
+                remove_node_out_edges(mygraph, nodeid);
             }
             else{
-                printf("Initiating new node\n");
+                // printf("Initiating new node\n");
                 node = init_node(nodeid - 48);
-                print_graph(mygraph);
+                // print_graph(mygraph);
                 add_node(mygraph, node);
-                print_graph(mygraph);
+                // print_graph(mygraph);
             }
             getchar();
             c = getchar();
@@ -110,7 +80,7 @@ int main(){
                 getchar();
                 char weight = getchar();
                 connect(mygraph, node -> id, c - 48, weight - 48, mygraph -> edgesize);
-                print_graph(mygraph);
+                // print_graph(mygraph);
                 getchar();
                 char dest2 = getchar();
                 if(isdigit(dest2)){
@@ -119,7 +89,7 @@ int main(){
                     connect(mygraph, node -> id, dest2 - 48, weight - 48, mygraph -> edgesize);
                 }
             }
-            print_graph(mygraph);
+            // print_graph(mygraph);
         }
         if(c == 'D' || c == 'd'){
             //Remove node:
@@ -133,19 +103,33 @@ int main(){
             char src = getchar();
             getchar();
             char dest = getchar();
-            printf("Dijsktra shortest path: %f\n", shortestPath(mygraph, src - 48, dest - 48));
+            printf("Dijsktra shortest path: %d\n", shortestPath(mygraph, src - 48, dest - 48));
         }
         if(c == 'T' || c == 't'){
             //Get TSP:
-            printf("TSP shortest path: \n");
-
+            getchar();
+            char size = getchar();
+            if(size - 48 <= 0){
+                printf("Incorrect size entered\n");
+                break;
+            }
+            getchar();
+            Node* list = get_node(mygraph, getchar() - 48);
+            Node* temp = list;
+            for(int i = 1; i < size - 48; i++){
+                getchar();
+                list -> next = get_node(mygraph, getchar() - 48);
+                list = list -> next; 
+            }
+            list = temp;
+            printf("TSP shortest path: %d\n", TSP(mygraph, temp, size - 48));
         }
         if(c == 'P' || c == 'p'){
             //Print graph:
-            // print_graph(mygraph);
-            getchar();
-            char nodeid = getchar();
-            print_node(mygraph, get_node(mygraph, nodeid - 48));
+            print_graph(mygraph);
+            // getchar();
+            // char nodeid = getchar();
+            // print_node(mygraph, get_node(mygraph, nodeid - 48));
         }
     }
     if(mygraph != NULL){
